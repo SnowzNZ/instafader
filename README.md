@@ -4,9 +4,6 @@
   Instafader
 </h1>
 <p align="center">
-<img alt="Python Version" src="https://img.shields.io/badge/python-3.11-blue">
-<a href="https://www.codefactor.io/repository/github/snowznz/instafader"><img alt="CodeFactor Score" src="https://www.codefactor.io/repository/github/snowznz/instafader/badge"></a>
-<a href="LICENSE"><img alt="GitHub License" src="https://img.shields.io/github/license/SnowzNZ/Instafader"></a>
 
 Instafader automatically turns your osu! skin into an insta-fading one, removing the animation of the hitcircle and hitcircleoverlay fading away.
 
