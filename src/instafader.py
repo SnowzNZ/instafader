@@ -471,7 +471,6 @@ class Instafader(customtkinter.CTk):
         new_size = (int(image.width * scale), int(image.height * scale))
         return image.resize(new_size, resample=Image.Resampling.LANCZOS)
 
-    # FIXME: transparency issue
     def create_composite_image(
         self, base: Image.Image, overlay: Image.Image
     ) -> Image.Image:
@@ -488,9 +487,7 @@ class Instafader(customtkinter.CTk):
         overlay = overlay.convert("RGBA")
 
         if base.size == overlay.size:
-            result = base.copy()
-            result.paste(overlay, (0, 0), overlay)
-            return result
+            return Image.alpha_composite(base, overlay)
 
         if overlay.size > base.size:
             result = Image.new("RGBA", overlay.size, (0, 0, 0, 0))
@@ -498,10 +495,8 @@ class Instafader(customtkinter.CTk):
                 (overlay.width - base.width) // 2,
                 (overlay.height - base.height) // 2,
             )
-            temp = Image.new("RGBA", overlay.size, (0, 0, 0, 0))
-            temp.paste(base, paste_position)
-            result = Image.alpha_composite(temp, result)
-            result.paste(overlay, (0, 0), overlay)
+            result.paste(base, paste_position, base)
+            return Image.alpha_composite(result, overlay)
         else:
             result = Image.new("RGBA", base.size, (0, 0, 0, 0))
             paste_position = (
@@ -509,9 +504,9 @@ class Instafader(customtkinter.CTk):
                 (base.height - overlay.height) // 2,
             )
             result.paste(base, (0, 0), base)
-            result.paste(overlay, paste_position, overlay)
-
-        return result
+            temp = Image.new("RGBA", base.size, (0, 0, 0, 0))
+            temp.paste(overlay, paste_position, overlay)
+            return Image.alpha_composite(result, temp)
 
     def instafade(self) -> None:
         """Instafade the skin"""
