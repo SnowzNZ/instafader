@@ -32,7 +32,7 @@ class Instafader(customtkinter.CTk):
 
         # Grid
         self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure((0, 1, 2, 3, 4), weight=1)
+        self.grid_rowconfigure((0, 1, 2, 3, 4, 5), weight=1)
 
         # Folder entry
         self.folder_entry = customtkinter.CTkEntry(self, placeholder_text="Skin Folder")
@@ -83,15 +83,30 @@ class Instafader(customtkinter.CTk):
         self.instafade_button.grid(
             row=3,
             column=0,
-            columnspan=2,
-            padx=10,
+            padx=(10, 0),
             sticky="ew",
+        )
+
+        # Revert button
+        self.revert_button = customtkinter.CTkButton(
+            self,
+            text="Revert",
+            command=self.revert_to_backup,
+            width=100,
+            fg_color="red",
+            hover_color="dark red",
+        )
+        self.revert_button.grid(
+            row=3,
+            column=1,
+            padx=(0, 10),
+            sticky="e",
         )
 
         # Progress bar
         self.progress_bar = customtkinter.CTkProgressBar(self)
         self.progress_bar.grid(
-            row=4,
+            row=5,
             column=0,
             columnspan=2,
             padx=10,
@@ -632,9 +647,70 @@ class Instafader(customtkinter.CTk):
         self.update()
         self.after(500, self.progress_bar.grid_remove)
 
+    def get_latest_backup(self) -> str | None:
+        """Find the most recent backup folder in the skin directory.
+
+        Returns:
+            str | None: Path to most recent backup folder, or None if no backups found
+        """
+        if not self.skin_folder:
+            return None
+
+        backup_folders = [
+            d
+            for d in os.listdir(self.skin_folder)
+            if os.path.isdir(os.path.join(self.skin_folder, d))
+            and d.startswith("instafader-backup")
+        ]
+
+        if not backup_folders:
+            return None
+
+        # Sort by creation time, newest first
+        backup_folders.sort(
+            key=lambda x: os.path.getctime(os.path.join(self.skin_folder, x)),
+            reverse=True,
+        )
+        return os.path.join(self.skin_folder, backup_folders[0])
+
+    def revert_to_backup(self) -> None:
+        """Restore skin files from the most recent backup folder"""
+        if not self.skin_folder:
+            messagebox.showerror("Error", "No skin folder selected")
+            return
+
+        backup_dir = self.get_latest_backup()
+        if not backup_dir:
+            messagebox.showerror("Error", "No backup found to revert to")
+            return
+
+        try:
+            self.progress_bar.grid()
+            self.progress_bar.set(0)
+            self.update()
+
+            backup_files = os.listdir(backup_dir)
+            for i, filename in enumerate(backup_files):
+                src = os.path.join(backup_dir, filename)
+                dst = os.path.join(self.skin_folder, filename)
+                shutil.copy2(src, dst)
+
+                progress = (i + 1) / len(backup_files)
+                self.progress_bar.set(progress)
+                self.update()
+
+            messagebox.showinfo("Success", "Successfully reverted to backup")
+
+            self.load_skin_ini()
+            if self.colors:
+                self.generate_preview(self.colors[0])
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to revert to backup: {e}")
+        finally:
+            self.progress_bar.grid_remove()
+
 
 if __name__ == "__main__":
     instafader = Instafader()
     instafader.mainloop()
-
-# TODO: add revert button
