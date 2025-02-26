@@ -24,11 +24,11 @@ class Instafader(customtkinter.CTk):
         self.geometry(f"{400}x{500}")
 
         # Variables
-        self.skin_folder = None
+        self.skin_folder: str | None = None
         self.colors: list[tuple[int, int, int]] = []
-        self.hitcircle_prefix: str = ""
-        self.selected_color: tuple[int, int, int] = None
-        self.backup_dir: str = ""
+        self.hitcircle_prefix: str | None = None
+        self.selected_color: tuple[int, int, int] | None = None
+        self.backup_dir: str | None = None
 
         # Grid
         self.grid_columnconfigure(0, weight=1)
