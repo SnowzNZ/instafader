@@ -491,24 +491,17 @@ class Instafader(customtkinter.CTk):
         if base.size == overlay.size:
             return Image.alpha_composite(base, overlay)
 
-        if overlay.size > base.size:
-            result = Image.new("RGBA", overlay.size, (0, 0, 0, 0))
-            paste_position = (
-                (overlay.width - base.width) // 2,
-                (overlay.height - base.height) // 2,
-            )
-            result.paste(base, paste_position, base)
-            return Image.alpha_composite(result, overlay)
-        else:
-            result = Image.new("RGBA", base.size, (0, 0, 0, 0))
-            paste_position = (
-                (base.width - overlay.width) // 2,
-                (base.height - overlay.height) // 2,
-            )
-            result.paste(base, (0, 0), base)
-            temp = Image.new("RGBA", base.size, (0, 0, 0, 0))
-            temp.paste(overlay, paste_position, overlay)
-            return Image.alpha_composite(result, temp)
+        result = Image.new("RGBA", overlay.size, (0, 0, 0, 0))
+        paste_position = (
+            (overlay.width - base.width) // 2,
+            (overlay.height - base.height) // 2,
+        )
+        temp = Image.new("RGBA", overlay.size, (0, 0, 0, 0))
+        temp.paste(base, paste_position)
+        result = Image.alpha_composite(temp, result)
+        result.paste(overlay, (0, 0), overlay)
+
+        return result
 
     def instafade(self) -> None:
         """Instafade the skin"""
