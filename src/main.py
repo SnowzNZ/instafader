@@ -246,7 +246,6 @@ class Instafader(customtkinter.CTk):
 
             self.update_color_options(self.colors)
 
-    # TODO: Cleanup
     def get_colors(self, data: list[bytes]) -> list[tuple[int, int, int]]:
         """Extract combo colors from skin.ini data.
 
@@ -256,28 +255,31 @@ class Instafader(customtkinter.CTk):
         Returns:
             List of RGB color tuples, or DEFAULT_COLORS if none found
         """
-        cols = []
+        colors = []
+
         for line in data:
-            if b"Combo" in line and (
-                b"//" not in line or line.find(b"//") > line.find(b"Combo")
-            ):
-                decoded = line.decode("utf-8")[line.find(b"Combo") + 5 :]
-                if not decoded[0].isdigit():
-                    continue
-                decoded = decoded[1:]
+            if b"Combo" not in line:
+                continue
 
-                index = 0
-                while index < len(decoded):
-                    if decoded[index].isdigit():
-                        break
-                    index += 1
-                decoded = decoded[index:]
+            if b"//" in line and line.find(b"//") < line.find(b"Combo"):
+                continue
 
-                col = decoded.strip().split(",")
-                col = tuple(int(i.strip()[:3]) for i in col)
-                cols.append(col)
+            decoded = line.decode("utf-8")
+            combo_part = decoded[decoded.find("Combo") + 5 :]
 
-        return DEFAULT_COLORS if len(cols) == 0 else cols
+            if not combo_part[0].isdigit():
+                continue
+
+            index = 1
+            while index < len(combo_part) and not combo_part[index].isdigit():
+                index += 1
+
+            color_string = combo_part[index:].strip()
+            color_values = color_string.split(",")
+            rgb_tuple = tuple(int(value.strip()[:3]) for value in color_values)
+            colors.append(rgb_tuple)
+
+        return DEFAULT_COLORS if not colors else colors
 
     def set_color(self, color: tuple[int, int, int]) -> None:
         """Set single combo color in skin.ini file and remove other combo colors.
