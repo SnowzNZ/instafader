@@ -25,8 +25,8 @@ class Instafader(customtkinter.CTk):
 
         # Variables
         self.skin_folder: str | None = None
-        self.colors: list[tuple[int, int, int]] = []
-        self.hitcircle_prefix: str | None = None
+        self.colors: list[tuple[int, int, int]] = DEFAULT_COLORS
+        self.hitcircle_prefix: str | None = "default"
         self.selected_color: tuple[int, int, int] | None = None
         self.backup_dir: str | None = None
 
