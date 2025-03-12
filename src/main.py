@@ -420,7 +420,7 @@ class Instafader(customtkinter.CTk):
         """Load a skin element and backup the original file.
 
         Args:
-            basename: Base name of the file without HD suffix (e.g. "hitcircle")
+            basename: Base name of the file without HD suffix (e.g. "hitcircle" or "skin/numbers/default-1")
             backup_folder: Path to backup folder
 
         Returns:
@@ -429,19 +429,39 @@ class Instafader(customtkinter.CTk):
         Raises:
             FileNotFoundError: If neither HD nor SD version exists
         """
-        hd_name = f"{basename}@2x.png"
-        sd_name = f"{basename}.png"
+        # Extract directory path and filename
+        dirname = os.path.dirname(basename)
+        filename = os.path.basename(basename)
+
+        hd_name = f"{filename}@2x.png"
+        sd_name = f"{filename}.png"
+
+        # Create full paths including subdirectories
+        hd_path = (
+            os.path.join(self.skin_folder, dirname, hd_name)
+            if dirname
+            else os.path.join(self.skin_folder, hd_name)
+        )
+        sd_path = (
+            os.path.join(self.skin_folder, dirname, sd_name)
+            if dirname
+            else os.path.join(self.skin_folder, sd_name)
+        )
+
+        # Create backup subdirectories if needed
+        backup_subdir = (
+            os.path.join(backup_folder, dirname) if dirname else backup_folder
+        )
+        os.makedirs(backup_subdir, exist_ok=True)
 
         try:
-            hd_path = os.path.join(self.skin_folder, hd_name)
             image = Image.open(hd_path)
-            shutil.copy2(hd_path, os.path.join(backup_folder, hd_name))
+            shutil.copy2(hd_path, os.path.join(backup_subdir, hd_name))
             return image, True
         except FileNotFoundError:
             try:
-                sd_path = os.path.join(self.skin_folder, sd_name)
                 image = Image.open(sd_path)
-                shutil.copy2(sd_path, os.path.join(backup_folder, sd_name))
+                shutil.copy2(sd_path, os.path.join(backup_subdir, sd_name))
                 return image, False
             except FileNotFoundError:
                 raise FileNotFoundError(
@@ -555,6 +575,10 @@ class Instafader(customtkinter.CTk):
         self.update()
 
         for i in range(1, 10):
+            # Extract directory path and filename base from hitcircle_prefix
+            prefix_dir = os.path.dirname(self.hitcircle_prefix)
+            prefix_base = os.path.basename(self.hitcircle_prefix)
+
             number, number_hd = self.load_skin_element(
                 f"{self.hitcircle_prefix}-{i}", self.backup_dir
             )
@@ -580,12 +604,18 @@ class Instafader(customtkinter.CTk):
 
             x, y = no_number.size
             no_number.paste(number, ((x - w) // 2, (y - h) // 2), number)
-            no_number.save(
-                os.path.join(
-                    self.skin_folder,
-                    f"{self.hitcircle_prefix}-{i}{'@2x' if number_hd else ''}.png",
-                )
+
+            # Create output directory if it doesn't exist
+            output_dir = os.path.join(self.skin_folder, prefix_dir)
+            os.makedirs(output_dir, exist_ok=True)
+
+            # Save with correct path
+            output_path = os.path.join(
+                output_dir,
+                f"{prefix_base}-{i}{'@2x' if number_hd else ''}.png",
             )
+            no_number.save(output_path)
+
             self.progress_bar.set(0.6 + (i * 0.02))
             self.update()
 
