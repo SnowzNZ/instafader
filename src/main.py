@@ -455,12 +455,12 @@ class Instafader(customtkinter.CTk):
         os.makedirs(backup_subdir, exist_ok=True)
 
         try:
-            image = Image.open(hd_path)
+            image = Image.open(hd_path).convert("RGBA")
             shutil.copy2(hd_path, os.path.join(backup_subdir, hd_name))
             return image, True
         except FileNotFoundError:
             try:
-                image = Image.open(sd_path)
+                image = Image.open(sd_path).convert("RGBA")
                 shutil.copy2(sd_path, os.path.join(backup_subdir, sd_name))
                 return image, False
             except FileNotFoundError:
